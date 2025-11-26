@@ -22,9 +22,9 @@ const Nav = () => {
     }
     
      setUpProviders();
-     alert("Providers:", providers);
-
   }, [])
+
+  console.log("Providers:", providers);
 
   return (
     <nav className='flex-between w-full mb-16 pt-3'>
