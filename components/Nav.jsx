@@ -22,7 +22,7 @@ const Nav = () => {
     }
     
      setUpProviders();
-     console.log("Providers:", providers);
+     alert("Providers:", providers);
 
   }, [])
 
