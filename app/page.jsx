@@ -1,4 +1,5 @@
 import Feed from "@components/Feed"
+import { headers } from "@node_modules/next/headers"
 
 const Home = () => {
   return (

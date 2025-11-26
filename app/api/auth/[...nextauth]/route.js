@@ -9,7 +9,7 @@ import Email from "@node_modules/next-auth/providers/email";
 const handler = NextAuth({
     providers: [
       GoogleProvider({
-            clientId: process.env.GOOGLE_ID,
+            clientId: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         })
     ],
