@@ -1,53 +1,77 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { connectToDB } from '@utils/database';
-
-import User from "@models/user";        
-// import { connectToDB } from "@utils/database";
-import Email from "@node_modules/next-auth/providers/email";
+import { connectToDB } from "@utils/database";
+import User from "@models/user";
 
 const handler = NextAuth({
-    providers: [
-      GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        })
-    ],
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+  ],
 
-    callbacks: {
-        async session({ session }) {
+  callbacks: {
+    async session({ session }) {
+      console.log("🔵 SESSION CALLBACK TRIGGERED");
+
+      try {
+        console.log("Session user email:", session.user.email);
+
         const sessionUser = await User.findOne({
-            email: session.user.email
-        })
+          email: session.user.email,
+        });
 
-        session.user.id = sessionUser._id.toString()
+        if (!sessionUser) {
+          console.log("❌ No user found in DB for session");
+          return session;
+        }
+
+        console.log("✅ User found for session:", sessionUser._id.toString());
+        session.user.id = sessionUser._id.toString();
 
         return session;
+      } catch (error) {
+        console.error("❌ SESSION ERROR:", error);
+        return session;
+      }
     },
+
     async signIn({ profile }) {
-        try {
-            await connectToDB();
+      console.log("🟡 SIGN-IN CALLBACK HIT");
+      console.log("Google Profile Received:", profile);
 
-            // check if a user already exists
-            const userExists = await User.findOne({
-                email: profile.email
-            });
+      try {
+        console.log("🔄 Connecting to database...");
+        await connectToDB();
+        console.log("✅ Database connected successfully");
 
-            // if not, create a new user
-            if(!userExists) {
-                await User.create({
-                    email: profile.email,
-                    username: profile.name.replace(" ", "").toLowerCase(),
-                    image: profile.picture
-                })
-            }
+        console.log("🔍 Checking if user exists...");
+        const userExists = await User.findOne({
+          email: profile.email,
+        });
 
-            return true; 
-        } catch (error) {
+        if (userExists) {
+          console.log("🟢 User already exists:", userExists.email);
+        } else {
+          console.log("🆕 Creating new user...");
 
+          await User.create({
+            email: profile.email,
+            username: profile.name.replace(" ", "").toLowerCase(),
+            image: profile.picture,
+          });
+
+          console.log("✅ New user created successfully");
         }
-    }
-    }
-})
+
+        return true;
+      } catch (error) {
+        console.error("❌ SIGN-IN ERROR:", error);
+        return false;
+      }
+    },
+  },
+});
 
 export { handler as GET, handler as POST };
